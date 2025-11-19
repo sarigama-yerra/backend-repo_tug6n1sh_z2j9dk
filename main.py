@@ -1,8 +1,12 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+from database import create_document
+from schemas import Contactmessage, Pilotrequest
 
-app = FastAPI()
+app = FastAPI(title="Hybrid Intelligence API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,7 +18,7 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return {"message": "Hello from FastAPI Backend!"}
+    return {"message": "Hybrid Intelligence Backend Running"}
 
 @app.get("/api/hello")
 def hello():
@@ -64,6 +68,47 @@ def test_database():
     
     return response
 
+# Forms
+class ContactForm(BaseModel):
+    name: str
+    email: EmailStr
+    company: Optional[str] = None
+    message: str
+
+class PilotRequestForm(BaseModel):
+    name: str
+    email: EmailStr
+    company: Optional[str] = None
+    notes: Optional[str] = None
+
+@app.post("/api/contact")
+def submit_contact(payload: ContactForm):
+    try:
+        doc = Contactmessage(
+            name=payload.name,
+            email=payload.email,
+            company=payload.company,
+            message=payload.message,
+            source="landing"
+        )
+        doc_id = create_document("contactmessage", doc)
+        return {"status": "ok", "id": doc_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/pilot")
+def request_pilot(payload: PilotRequestForm):
+    try:
+        doc = Pilotrequest(
+            name=payload.name,
+            email=payload.email,
+            company=payload.company,
+            notes=payload.notes,
+        )
+        doc_id = create_document("pilotrequest", doc)
+        return {"status": "ok", "id": doc_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

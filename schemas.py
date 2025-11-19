@@ -11,7 +11,7 @@ Model name is converted to lowercase for the collection name:
 - BlogPost -> "blogs" collection
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import Optional
 
 # Example schemas (replace with your own):
@@ -22,7 +22,7 @@ class User(BaseModel):
     Collection name: "user" (lowercase of class name)
     """
     name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
+    email: EmailStr = Field(..., description="Email address")
     address: str = Field(..., description="Address")
     age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
     is_active: bool = Field(True, description="Whether user is active")
@@ -38,11 +38,25 @@ class Product(BaseModel):
     category: str = Field(..., description="Product category")
     in_stock: bool = Field(True, description="Whether product is in stock")
 
-# Add your own schemas here:
-# --------------------------------------------------
+# Hybrid Intelligence landing forms
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Contactmessage(BaseModel):
+    """
+    Contact messages submitted from the landing page
+    Collection name: "contactmessage"
+    """
+    name: str = Field(..., description="Sender name")
+    email: EmailStr = Field(..., description="Sender email")
+    company: Optional[str] = Field(None, description="Company name")
+    message: str = Field(..., min_length=5, description="Message body")
+    source: Optional[str] = Field("landing", description="Form source or page context")
+
+class Pilotrequest(BaseModel):
+    """
+    Requests for pilots from CTA buttons
+    Collection name: "pilotrequest"
+    """
+    name: str = Field(..., description="Requester name")
+    email: EmailStr = Field(..., description="Requester email")
+    company: Optional[str] = Field(None, description="Company name")
+    notes: Optional[str] = Field(None, description="Additional notes or goals")
